@@ -1,3 +1,35 @@
+:root {
+  color: var(--text);
+  background: var(--bg);
+}
+
+body,
+#root {
+  color: var(--text);
+  background: var(--bg);
+}
+
+input,
+button,
+textarea,
+select,
+label,
+.MuiInputBase-root,
+.MuiFormLabel-root,
+.MuiInputLabel-root,
+.MuiSelect-root,
+.MuiSelect-select,
+.MuiMenuItem-root,
+.MuiSvgIcon-root {
+  color: var(--text-h);
+}
+
+.MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline,
+.MuiFilledInput-root .MuiFilledInput-underline,
+.MuiInputBase-root {
+  border-color: var(--border);
+}
+
 .counter {
   font-size: 16px;
   padding: 5px 10px;
