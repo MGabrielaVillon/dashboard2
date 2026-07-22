@@ -4,38 +4,47 @@ import InputLabel from '@mui/material/InputLabel';
 import Select, { type SelectChangeEvent } from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 
-export default function SelectorUI() {
-   const [cityInput, setCityInput] = useState('');
+interface SelectorProps {
+  onOptionSelect: (option: string) => void;
+}
 
-   const handleChange = (event: SelectChangeEvent<string>) => {
-      setCityInput(event.target.value);
-   };
+const cityOptions = ['guayaquil', 'quito', 'manta', 'cuenca'];
 
-   const formatCity = (city: string) => {
-      return city.charAt(0).toUpperCase() + city.slice(1).toLowerCase();
-   };
+const formatCity = (city: string) => city.charAt(0).toUpperCase() + city.slice(1).toLowerCase();
 
-   return (
-      <FormControl fullWidth>
-         <InputLabel id="city-select-label">Ciudad</InputLabel>
-         <Select
-            labelId="city-select-label"
-            id="city-simple-select"
-            label="Ciudad"
-            value={cityInput}
-            onChange={handleChange}
-         >
-            <MenuItem disabled><em>Seleccione una ciudad</em></MenuItem>
-            <MenuItem value={"Guayaquil"}>Guayaquil</MenuItem>
-            <MenuItem value={"Quito"}>Quito</MenuItem>
-            <MenuItem value={"Manta"}>Manta</MenuItem>
-            <MenuItem value={"Cuenca"}>Cuenca</MenuItem>
-         </Select>
-         {cityInput && (
-            <p>
-               Información del clima en <strong>{formatCity(cityInput)}</strong>
-            </p>
-         )}
-      </FormControl>
-   );
+export default function SelectorUI({ onOptionSelect }: SelectorProps) {
+  const [selectedValue, setSelectedValue] = useState('guayaquil');
+
+  const handleChange = (event: SelectChangeEvent<string>) => {
+    const value = event.target.value as string;
+    setSelectedValue(value);
+    onOptionSelect(value);
+  };
+
+  return (
+    <FormControl fullWidth>
+      <InputLabel id="city-select-label">Ciudad</InputLabel>
+      <Select
+        labelId="city-select-label"
+        id="city-simple-select"
+        label="Ciudad"
+        value={selectedValue}
+        onChange={handleChange}
+      >
+        <MenuItem value="" disabled>
+          <em>Seleccione una ciudad</em>
+        </MenuItem>
+        {cityOptions.map((city) => (
+          <MenuItem key={city} value={city}>
+            {formatCity(city)}
+          </MenuItem>
+        ))}
+      </Select>
+      {selectedValue && (
+        <p>
+          Información del clima en <strong>{formatCity(selectedValue)}</strong>
+        </p>
+      )}
+    </FormControl>
+  );
 }
