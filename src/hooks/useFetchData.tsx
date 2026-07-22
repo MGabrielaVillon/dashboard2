@@ -1,46 +1,61 @@
-{/*
-    Importe los hooks useState y useEffect de React.
-
-Importe la interfaz como tipos de datos (type) OpenMeteoResponse del archivo ../types/DashboardTypes.tsx.
-
-Declare que el componente useFetchData retorna un objeto del tipo OpenMeteoResponse.
-
-Dentro de useFetchData:
-
-Declare la constante de estado data y la función de actualización setData del tipo OpenMeteoResponse (o null). El valor predeterminado es de tipo null.
-
-Defina la constante URL con el endpoint de los datos de Open-Meteo.
-
-Agregue el hook useEffect para que reaccione únicamente después del primer renderizado del DOM.
-
-Retorne data al final del componente
-
-Dentro del función flecha del useEffect, realice un requerimiento asíncrono con la URL del endpoint. Al completarse la petición, actualice el estado data con la respuesta en formato JSON.
-
-
-    */}
+// useFetchData obtiene datos de Open-Meteo y devuelve un objeto con tres estados:
+// 1) data: la respuesta de la API (o null si todavía no llegó)
+// 2) loading: si la petición está en curso
+// 3) error: mensaje de error si la petición falla
 
 import { useState, useEffect } from 'react';
 import { type OpenMeteoResponse } from '../types/DashboardTypes';
 
-export default function useFetchData(): OpenMeteoResponse | null {
-    const [data, setData] = useState<OpenMeteoResponse | null>(null);
+export interface UseFetchDataResult {
+    data: OpenMeteoResponse | null;
+    loading: boolean;
+    error: string | null;
+}
 
-    const URL = 'https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&hourly=temperature_2m&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m&timezone=America%2FChicago';
+export default function useFetchData(): UseFetchDataResult {
+    const [data, setData] = useState<OpenMeteoResponse | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const URL = 'https://api.open-meteo.com/v1/forecast?latitude=-2.8953&longitude=-78.9963&hourly=temperature_2m,wind_speed_10m&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m&timezone=America%2FChicago';
 
     useEffect(() => {
+        // AbortController evita actualizar estado cuando el componente se desmonta
+        const controller = new AbortController();
+
         const fetchData = async () => {
+            setLoading(true);
+            setError(null);
+
             try {
-                const response = await fetch(URL);
-                const jsonData = await response.json();
+                const response = await fetch(URL, { signal: controller.signal });
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                const jsonData: OpenMeteoResponse = await response.json();
                 setData(jsonData);
-            } catch (error) {
-                console.error('Error fetching data:', error);
+            } catch (fetchError) {
+                if (fetchError instanceof Error) {
+                    // Ignorar el abort manual de la petición, ya que ocurre
+                    // cuando el componente se desmonta o el modo dev recarga HMR.
+                    if (fetchError.name === 'AbortError') {
+                        return;
+                    }
+                    setError(fetchError.message);
+                } else {
+                    setError('Error desconocido al obtener los datos.');
+                }
+            } finally {
+                setLoading(false);
             }
         };
 
         fetchData();
+
+        return () => {
+            controller.abort();
+        };
     }, []);  // El array vacío asegura que el efecto se ejecute solo una vez después del primer renderizado
 
-    return data;
+    return { data, loading, error };
 }
